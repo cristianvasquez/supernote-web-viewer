@@ -45,7 +45,27 @@
 
 <script type="module">
   import { SupernoteX } from 'supernote-typescript'
-  import SupernoteWorker from './worker.js'
+
+  class SupernoteWorker {
+    constructor () {
+      this.worker = new Worker(
+        new URL('src/worker.js?v=' + Date.now(), import.meta.url),
+        { type: 'module' },
+      )
+    }
+
+    process (note, pageIndex) {
+      this.worker.postMessage({ note, pageIndex })
+    }
+
+    onMessage (callback) {
+      this.worker.onmessage = (e) => callback(e.data)
+    }
+
+    terminate () {
+      this.worker.terminate()
+    }
+  }
 
   const MAX_WORKERS = 3
 
