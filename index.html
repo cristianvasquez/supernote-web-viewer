@@ -23,6 +23,7 @@
             color: gray;
         }
     </style>
+  <script type="module" crossorigin src="./assets/index-BVR8xCK0.js"></script>
 </head>
 <body>
 <h1>Display a Supernote File</h1>
@@ -31,55 +32,5 @@
 </form>
 <div id="images"></div>
 
-<script type="module">
-  import { SupernoteX, toImage } from 'supernote-typescript';
-
-  document.getElementById('noteInput').addEventListener('change', async (event) => {
-    const fileInput = event.target;
-    const file = fileInput.files[0];
-
-    if (!file) {
-      alert('Please select a file.');
-      return;
-    }
-
-    try {
-      const imagesContainer = document.getElementById('images');
-      imagesContainer.innerHTML = ''; // Clear previous images
-
-      // Read the file as ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-
-      // Process with SupernoteX
-      const note = new SupernoteX(uint8Array);
-
-      let index = 1;
-      for (const page of note.pages) {
-        // Display loading placeholder
-        const placeholder = document.createElement('span');
-        placeholder.textContent = `Processing page ${index}...`;
-        imagesContainer.appendChild(placeholder);
-
-        const [image] = await toImage(note, [index]);
-        const imageBuffer = await image.toBuffer('image/png');
-        const base64Image = `data:image/png;base64,${btoa(
-          new Uint8Array(imageBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-        )}`;
-
-        // Replace the placeholder with the actual image
-        const imgElement = document.createElement('img');
-        imgElement.src = base64Image;
-        imgElement.alt = `Page ${index}`;
-        imagesContainer.replaceChild(imgElement, placeholder);
-
-        index++;
-      }
-    } catch (error) {
-      console.error('Error processing the file:', error);
-      alert('An error occurred while processing the file.');
-    }
-  });
-</script>
 </body>
 </html>
