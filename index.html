@@ -46,12 +46,11 @@
 <script type="module">
   import { SupernoteX } from 'supernote-typescript'
 
+  import MyWorker from './src/worker?worker'
+
   class SupernoteWorker {
     constructor () {
-      this.worker = new Worker(
-        new URL('./src/worker.js?v=' + Date.now(), import.meta.url),
-        { type: 'module' },
-      )
+      this.worker = new MyWorker()
     }
 
     process (note, pageIndex) {
