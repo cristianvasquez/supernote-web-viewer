@@ -1,7 +1,9 @@
-At: https://cristianvasquez.github.io/supernote-web-viewer/
+## Supernote web viewer
 
-- Needs a lot of love.
+Online version at: https://cristianvasquez.github.io/supernote-web-viewer/
 
-Uses [supernote-typescript](https://github.com/philips/supernote-typescript/tree/main) which is based
-on [Tiemen/supernote](https://gitlab.com/Tiemen/supernote) which is based
-on [supernote-tool](https://github.com/jya-dev/supernote-tool)
+All transformations occur directly in your browser (your notes remain private and are not transmitted to any server)
+
+It’s powered by the [supernote-typescript](https://github.com/philips/supernote-typescript/tree/main) library, which is
+based on [Tiemen/supernote](https://gitlab.com/Tiemen/supernote) and the
+original [supernote-tool](https://github.com/jya-dev/supernote-tool).
