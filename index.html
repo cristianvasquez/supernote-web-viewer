@@ -9,14 +9,15 @@
     <style>
         #images {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 10px;
         }
 
         .image-container {
             position: relative;
             min-height: 200px;
+            /*width: 200px; !* Default width *!*/
             border: 1px solid #ccc;
             padding: 10px;
             display: flex;
@@ -27,6 +28,8 @@
         .image-container img {
             max-width: 100%;
             height: auto;
+            http: / /
+            localhost: 5173/
         }
 
         .loading {
@@ -45,8 +48,9 @@
 <h1>Display a Supernote File</h1>
 <form id="uploadForm">
     <input type="file" id="noteInput" accept=".note" required/>
+    <label for="widthSlider">width </label>
+    <input type="range" id="widthSlider" min="150" max="1600">
 </form>
-<progress id="progressBar" value="0" max="100" style="display: none;"></progress>
 <div id="images"></div>
 
 <script type="module">
@@ -72,7 +76,8 @@
     }
   }
 
-  const MAX_WORKERS = 3
+  const hardwareConcurrency = navigator.hardwareConcurrency || 3 // Default to 1 if not available
+  const MAX_WORKERS = Math.min(hardwareConcurrency, 8)
 
   document.getElementById('noteInput').addEventListener('change', async (event) => {
     const file = event.target.files[0]
@@ -111,6 +116,16 @@
       if (pageIndex) worker.process(note, pageIndex)
     })
   })
+
+  document.getElementById('widthSlider').addEventListener('input', (event) => {
+    const width = event.target.value + 'px'
+    document.querySelectorAll('.image-container').forEach(container => {
+      container.style.width = width
+    })
+    document.getElementById('images').style.gridTemplateColumns = `repeat(auto-fit, minmax(${width}, 1fr))`
+  })
+
+
 </script>
 
 
