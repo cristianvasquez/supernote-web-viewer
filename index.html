@@ -28,8 +28,6 @@
         .image-container img {
             max-width: 100%;
             height: auto;
-            http: / /
-            localhost: 5173/
         }
 
         .loading {
@@ -76,7 +74,7 @@
     }
   }
 
-  const hardwareConcurrency = navigator.hardwareConcurrency || 3 // Default to 1 if not available
+  const hardwareConcurrency = navigator.hardwareConcurrency || 3 // Default to 3 if not available
   const MAX_WORKERS = Math.min(hardwareConcurrency, 8)
 
   document.getElementById('noteInput').addEventListener('change', async (event) => {
