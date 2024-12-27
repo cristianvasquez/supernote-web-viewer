@@ -8,7 +8,6 @@
     "build": "vite build"
   },
   "author": "",
-  "license": "MIT",
   "description": "",
   "dependencies": {
     "supernote-typescript": "^0.2.4",
