@@ -13,6 +13,7 @@ let reducedMotion = null;
 let anchor = 0;
 let data = [];
 let dummyPlaceholder = null;
+let currentFocusedIndex = null;
 
 // === Config
 const debug = false;
@@ -134,17 +135,29 @@ function render(now) {
   const pointerXLocal = pointer.x + currentScrollX;
   const pointerYLocal = pointer.y + currentScrollY;
 
+  // Calculate cols early for navigation
+  const { cols, boxMaxSizeX } = colsBoxMaxSizeXF(newWindowSizeX);
+
   let newFocused = (() => {
-    if (inputCode === "Escape") return null;
+    if (inputCode === "Escape") {
+      // Store current focused index when escaping to grid view
+      if (focused !== null) {
+        currentFocusedIndex = focused;
+      }
+      return null;
+    }
     if (inputCode === "Space") return focused;
     if (
-      (inputCode === "ArrowLeft" || inputCode === "ArrowRight") &&
+      (inputCode === "ArrowLeft" || inputCode === "ArrowRight" || inputCode === "ArrowUp" || inputCode === "ArrowDown") &&
       focused == null
     )
-      return 0;
+      return currentFocusedIndex !== null ? currentFocusedIndex : 0;
     if (inputCode === "ArrowLeft") return Math.max(0, focused - 1);
     if (inputCode === "ArrowRight")
       return Math.min(data.length - 1, focused + 1);
+    if (inputCode === "ArrowUp") return Math.max(0, focused - cols);
+    if (inputCode === "ArrowDown")
+      return Math.min(data.length - 1, focused + cols);
     return focused;
   })();
 
@@ -174,7 +187,6 @@ function render(now) {
     }
   }
 
-  const { cols, boxMaxSizeX } = colsBoxMaxSizeXF(newWindowSizeX);
   const boxes2DSizeX = [],
     boxes2DSizeY = [],
     rowsTop = [windowPaddingTop];
