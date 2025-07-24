@@ -136,6 +136,7 @@ function render(now) {
 
     let newFocused = (() => {
         if (inputCode === "Escape") return null;
+        if (inputCode === "Space") return focused; // Ignore spacebar for navigation
         if (
             (inputCode === "ArrowLeft" || inputCode === "ArrowRight") &&
             focused == null
@@ -156,8 +157,13 @@ function render(now) {
             selection.removeAllRanges();
             selection.addRange(range);
         } else if (focused == null) {
-            newFocused =
-                hitTest2DMode(data, pointerXLocal, pointerYLocal) ?? newFocused;
+            const hitIndex = hitTest2DMode(data, pointerXLocal, pointerYLocal);
+            if (hitIndex !== null && data[hitIndex].isUpload) {
+                document.getElementById('noteInput').click();
+                newFocused = newFocused; // Don't focus the upload card
+            } else {
+                newFocused = hitIndex ?? newFocused;
+            }
         } else {
             newFocused = hitTest1DMode(
                 data,
@@ -401,17 +407,6 @@ function render(now) {
             `${window.location.pathname}${window.location.search}${newFocused == null ? "" : "#" + data[newFocused].id}`,
         );
         
-        // Toggle UI elements visibility based on focus state
-        const uploadForm = document.getElementById('uploadForm');
-        const githubRibbon = document.querySelector('.github-fork-ribbon');
-        
-        if (newFocused !== null) {
-            uploadForm?.classList.add('focused-mode');
-            githubRibbon?.classList.add('focused-mode');
-        } else {
-            uploadForm?.classList.remove('focused-mode');
-            githubRibbon?.classList.remove('focused-mode');
-        }
     }
 
     events.keydown = events.click = events.mousemove = null;
@@ -426,9 +421,17 @@ function render(now) {
 
 // === Public API
 export function initCardViewer(initialData) {
+    // Clear existing data and DOM nodes
+    data.forEach(d => {
+        if (d.node && d.node.parentNode) {
+            document.body.removeChild(d.node);
+        }
+    });
+    
     data = initialData.map((d, i) => {
         const ar = d.w / d.h;
-        const { cols, boxMaxSizeX } = colsBoxMaxSizeXF(windowSizeX);
+        const currentWindowSizeX = windowSizeX || document.documentElement.clientWidth;
+        const { cols, boxMaxSizeX } = colsBoxMaxSizeXF(currentWindowSizeX);
         const imgMaxSizeY = boxMaxSizeX + 100;
         const sizeX = Math.min(d.w, boxMaxSizeX, imgMaxSizeY * ar);
         const sizeY = sizeX / ar + promptSizeY;
@@ -453,9 +456,10 @@ export function initCardViewer(initialData) {
             x: spring((boxMaxSizeX + boxesGapX) * (i % cols) + boxesGapX + (boxMaxSizeX - sizeX) / 2),
             y: spring(windowPaddingTop + Math.floor(i / cols) * (boxMaxSizeX * 0.7 + boxesGapY)),
             scale: spring(1),
-            fxFactor: spring(20),
+            fxFactor: spring(1),
             node,
             highResSrc: d.highResSrc,
+            isUpload: d.isUpload
         };
     });
 
@@ -469,7 +473,8 @@ export function updateCardImage(id, highResSrc, width, height) {
         card.naturalSizeX = width;
         card.ar = width / height;
 
-        const { boxMaxSizeX } = colsBoxMaxSizeXF(windowSizeX);
+        const currentWindowSizeX = windowSizeX || document.documentElement.clientWidth;
+        const { boxMaxSizeX } = colsBoxMaxSizeXF(currentWindowSizeX);
         const imgMaxSizeY = boxMaxSizeX + 100;
         const newSizeX = Math.min(
             card.naturalSizeX,
@@ -516,6 +521,10 @@ export function initializeCardViewer() {
     window.addEventListener("scroll", scheduleRender, true);
     window.addEventListener("popstate", scheduleRender);
     window.addEventListener("keydown", (e) => {
+        // Prevent spacebar from triggering form/file input
+        if (e.code === "Space") {
+            e.preventDefault();
+        }
         events.keydown = e;
         scheduleRender();
     });

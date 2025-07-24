@@ -11,63 +11,7 @@ body {
     color: rgb(192, 198, 205);
 }
 
-#uploadForm {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 9999;
-    background-color: rgba(15, 25, 35, 0.95);
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
 
-#uploadForm.focused-mode {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
-}
-
-#noteInput {
-    padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-#noteInput:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.upload-status {
-    margin-top: 8px;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-@media (max-width: 768px) {
-    #uploadForm {
-        left: 10px;
-        top: 10px;
-        padding: 12px;
-    }
-}
-
-.github-fork-ribbon {
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.github-fork-ribbon.focused-mode {
-    opacity: 0;
-    transform: translateX(20px);
-    pointer-events: none;
-}
 
 #github-icon {
     position: absolute;
