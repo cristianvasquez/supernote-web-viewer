@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!file) return
 
     updateStatus('Loading file...')
-    
+
     const arrayBuffer = await file.arrayBuffer()
     const note = new SupernoteX(new Uint8Array(arrayBuffer))
     totalPages = note.pages.length
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: `page-${i + 1}`,
       w: 800,
       h: 600,
-      prompt: `Page ${i + 1}`,
+      // prompt: `Page ${i + 1}`,
       lowResSrc: transparentPixel,
       highResSrc: ''
     }))
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'success') {
           completedPages++
           updateStatus(`Processed ${completedPages}/${totalPages} pages`)
-          
+
           const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageData)))
           const highResSrc = `data:image/png;base64,${base64Image}`
 
