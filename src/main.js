@@ -1,6 +1,6 @@
 import { SupernoteX } from 'supernote-typescript'
 import MyWorker from './worker?worker'
-import { initCardViewer, updateCardImage, initializeCardViewer } from './card-viewer.js'
+import { SupernoteViewer } from '../lib/SupernoteViewer.js'
 
 class SupernoteWorker {
   constructor() {
@@ -28,34 +28,8 @@ function updateStatus(message) {
 }
 
 // Application state
-let currentState = 'upload' // 'upload' or 'viewing'
 let workers = []
-
-const uploadCard = {
-  id: 'upload-card',
-  w: 800,
-  h: 600,
-  prompt: 'Click to select .note file',
-  lowResSrc: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#f8f9fa" stroke="#dee2e6" stroke-width="4" stroke-dasharray="20,10" rx="8"/><text x="50%" y="50%" font-family="system-ui" font-size="48" fill="#6c757d" text-anchor="middle" dominant-baseline="middle">📄</text></svg>'),
-  highResSrc: '',
-  isUpload: true,
-  onUploadClick: () => document.getElementById('noteInput').click()
-}
-
-function showUploadState() {
-  currentState = 'upload'
-  initCardViewer([uploadCard])
-}
-
-function showViewingState(noteCards) {
-  currentState = 'viewing'
-  // Hide GitHub fork ribbon permanently
-  const forkRibbon = document.querySelector('.github-fork-ribbon')
-  if (forkRibbon) {
-    forkRibbon.style.display = 'none'
-  }
-  initCardViewer([uploadCard, ...noteCards])
-}
+let viewer = null
 
 function cleanupWorkers() {
   workers.forEach(worker => worker.terminate())
@@ -63,22 +37,28 @@ function cleanupWorkers() {
 }
 
 function handleUploadClick() {
-  if (currentState === 'viewing') {
+  if (viewer) {
     cleanupWorkers()
-    showUploadState()
+    viewer.reset()
   }
   document.getElementById('noteInput').click()
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initializeCardViewer()
-  showUploadState()
+  // Initialize the SupernoteViewer with callbacks
+  viewer = new SupernoteViewer({
+    onProgress: (completed, total) => {
+      updateStatus(`Processed ${completed}/${total} pages`)
+    },
+    onPageComplete: (pageNumber, src, width, height) => {
+      // Page completed callback - could be used for additional processing
+    },
+    onUploadClick: handleUploadClick,
+    showUploadCard: true
+  })
 
   // Set up upload click handler
   window.handleUploadClick = handleUploadClick
-
-  let completedPages = 0
-  let totalPages = 0
 
   document.getElementById('noteInput').addEventListener('change', async (event) => {
     const file = event.target.files[0]
@@ -88,44 +68,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const arrayBuffer = await file.arrayBuffer()
     const note = new SupernoteX(new Uint8Array(arrayBuffer))
-    totalPages = note.pages.length
-    completedPages = 0
+    const totalPages = note.pages.length
 
-    const transparentPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+    // Initialize the viewer with the total number of pages
+    viewer.initializePages(totalPages)
 
-    const noteCards = Array.from({ length: totalPages }, (_, i) => ({
-      id: `page-${i + 1}`,
-      w: 800,
-      h: 600,
-      // prompt: `Page ${i + 1}`,
-      lowResSrc: transparentPixel,
-      highResSrc: ''
-    }))
+    // Hide GitHub fork ribbon when viewing
+    const forkRibbon = document.querySelector('.github-fork-ribbon')
+    if (forkRibbon) {
+      forkRibbon.style.display = 'none'
+    }
 
-    // Clean up any existing workers and switch to viewing state
+    // Clean up any existing workers
     cleanupWorkers()
-    showViewingState(noteCards)
 
+    // Create workers and process pages
     workers = Array(MAX_WORKERS).fill(null).map(() => new SupernoteWorker())
     const processQueue = Array.from({ length: totalPages }, (_, i) => i + 1)
 
     workers.forEach(worker => {
       worker.onMessage(async ({ pageIndex, imageData, status, error }) => {
         if (status === 'success') {
-          completedPages++
-          updateStatus(`Processed ${completedPages}/${totalPages} pages`)
-
           const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageData)))
-          const highResSrc = `data:image/png;base64,${base64Image}`
-
+          
+          // Get image dimensions
           const img = new Image()
-          img.src = highResSrc
+          img.src = `data:image/png;base64,${base64Image}`
           img.onload = () => {
-            updateCardImage(`page-${pageIndex}`, highResSrc, img.width, img.height)
+            viewer.addPageImage(pageIndex, base64Image, img.width, img.height)
           }
           img.onerror = (err) => {
             console.error(`Error loading image for dimensions for page ${pageIndex}:`, err)
-            updateCardImage(`page-${pageIndex}`, highResSrc, 800, 600)
+            viewer.addPageImage(pageIndex, base64Image, 800, 600)
           }
         } else {
           console.error(`Error processing page ${pageIndex}:`, error)
