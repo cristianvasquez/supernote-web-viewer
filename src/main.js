@@ -38,7 +38,8 @@ const uploadCard = {
   prompt: 'Click to select .note file',
   lowResSrc: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#f8f9fa" stroke="#dee2e6" stroke-width="4" stroke-dasharray="20,10" rx="8"/><text x="50%" y="50%" font-family="system-ui" font-size="48" fill="#6c757d" text-anchor="middle" dominant-baseline="middle">📄</text></svg>'),
   highResSrc: '',
-  isUpload: true
+  isUpload: true,
+  onUploadClick: () => document.getElementById('noteInput').click()
 }
 
 function showUploadState() {
